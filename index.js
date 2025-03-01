@@ -26,3 +26,49 @@
 █▒▒▄▀▄▀▒▒██▒▒▄▀▄▀▒▒█▒▒▄▀▒▒██████████▒▒▄▀▒▒█▒▒▄▀▄▀▄▀▄▀▒▒▒▒█
 █▒▒▒▒▒▒▒▒██▒▒▒▒▒▒▒▒█▒▒▒▒▒▒██████████▒▒▒▒▒▒█▒▒▒▒▒▒▒▒▒▒▒▒███
 ████████████████████████████████████████████████████████*/
+const { default: makeWASocket, useMultiFileAuthState, delay } = require('@whiskeysockets/baileys');
+const PQueue = require('p-queue');
+
+async function startBot() {
+    const { state, saveCreds } = await useMultiFileAuthState('auth');
+    const sock = makeWASocket({ auth: state });
+
+    // Rate limit queue (max 1 request per second)
+    const queue = new PQueue({ interval: 1000, intervalCap: 1 });
+
+    sock.ev.on('messages.upsert', async ({ messages }) => {
+        for (const msg of messages) {
+            if (!msg.message) continue;
+
+            // Ignore reaction messages
+            if (msg.message.reactionMessage) {
+                console.log('Ignoring reaction message.');
+                continue;
+            }
+
+            // Handle the message inside a rate-limited queue
+            queue.add(async () => {
+                try {
+                    console.log('Processing message:', msg);
+                    // Your bot's response logic here
+                } catch (error) {
+                    console.error('Error processing message:', error);
+                }
+            });
+        }
+    });
+
+    // Handle rate-overlimit error
+    sock.ev.on('connection.update', async ({ lastDisconnect }) => {
+        if (lastDisconnect?.error?.message === 'rate-overlimit') {
+            console.warn('Rate limit exceeded. Retrying after delay...');
+            await delay(5000); // Wait 5 seconds before reconnecting
+            startBot();
+        }
+    });
+
+    sock.ev.on('creds.update', saveCreds);
+}
+
+startBot();
+      
