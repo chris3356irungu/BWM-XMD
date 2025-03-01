@@ -26,6 +26,7 @@
 █▒▒▄▀▄▀▒▒██▒▒▄▀▄▀▒▒█▒▒▄▀▒▒██████████▒▒▄▀▒▒█▒▒▄▀▄▀▄▀▄▀▒▒▒▒█
 █▒▒▒▒▒▒▒▒██▒▒▒▒▒▒▒▒█▒▒▒▒▒▒██████████▒▒▒▒▒▒█▒▒▒▒▒▒▒▒▒▒▒▒███
 ████████████████████████████████████████████████████████*/
+npm install @whiskeysockets/baileys p-queue
 const { default: makeWASocket, useMultiFileAuthState, delay } = require('@whiskeysockets/baileys');
 const PQueue = require('p-queue');
 
