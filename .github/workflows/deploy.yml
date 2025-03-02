@@ -1,0 +1,35 @@
+name: Deploy WhatsApp Bot
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build the bot (if necessary)
+        run: npm run build
+
+      - name: Run the bot
+        run: node bot.js
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          WHATSAPP_API_KEY: ${{ secrets.WHATSAPP_API_KEY }}
+
+      - name: Keep bot running
+        run: nohup node bot.js &
